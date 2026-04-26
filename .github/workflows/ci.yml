@@ -82,7 +82,7 @@ jobs:
       - name: Build Rust parser binary
         run: |
           cargo build --release
-          cp target/release/parse ../bin/parse-rs
+          cp target/release/w3grs ../bin/parse-rs
         working-directory: w3grs
 
       # ---- Node / w3gjs ----
