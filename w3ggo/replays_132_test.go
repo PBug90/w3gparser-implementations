@@ -4,7 +4,7 @@ import (
 	"strings"
 	"testing"
 
-	w3g "w3ggotest"
+	w3g "w3ggo"
 )
 
 func TestReplay132_Reforged1(t *testing.T) {

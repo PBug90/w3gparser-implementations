@@ -5,7 +5,7 @@ import (
 	"runtime"
 	"testing"
 
-	w3g "w3ggotest"
+	w3g "w3ggo"
 )
 
 func replayPath(version, name string) string {

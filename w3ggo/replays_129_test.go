@@ -4,7 +4,7 @@ import (
 	"math"
 	"testing"
 
-	w3g "w3ggotest"
+	w3g "w3ggo"
 )
 
 func TestReplay129_NeteaseObs(t *testing.T) {
