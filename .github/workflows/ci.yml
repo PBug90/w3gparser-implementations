@@ -80,7 +80,9 @@ jobs:
           workspaces: w3grs
 
       - name: Build Rust parser binary
-        run: cargo build --release
+        run: |
+          cargo build --release --bin parse
+          cp target/release/parse ../bin/parse-rs
         working-directory: w3grs
 
       # ---- Node / w3gjs ----
@@ -96,7 +98,8 @@ jobs:
 
       # ---- Validate all replays in validate/replays/ ----
       - name: Run cross-tool validation
+        working-directory: validate
         env:
           GO_BIN:   ${{ github.workspace }}/bin/w3g-go
-          RUST_BIN: ${{ github.workspace }}/w3grs/target/release/parse
-        run: npx tsx validate/validate.ts
+          RUST_BIN: ${{ github.workspace }}/bin/parse-rs
+        run: npx tsx validate.ts
