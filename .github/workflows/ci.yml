@@ -1,0 +1,102 @@
+name: CI
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+    branches: ["**"]
+
+jobs:
+  # ---------------------------------------------------------------------------
+  # Go unit tests
+  # ---------------------------------------------------------------------------
+  test-go:
+    name: Go unit tests
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: w3ggo
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.21"
+          cache-dependency-path: w3ggo/go.mod
+
+      - name: Run tests
+        run: go test ./... -v -count=1
+
+  # ---------------------------------------------------------------------------
+  # Rust unit tests
+  # ---------------------------------------------------------------------------
+  test-rust:
+    name: Rust unit tests
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: w3grs
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: w3grs
+
+      - name: Run tests
+        run: cargo test --all
+
+  # ---------------------------------------------------------------------------
+  # Cross-tool validation
+  # Builds both CLI parsers, then runs validate/validate.ts against every
+  # replay in validate/replays/ — asserting Go == Rust and cross-checking
+  # key fields against w3gjs.
+  # ---------------------------------------------------------------------------
+  cross-validate:
+    name: Cross-tool validation (Go == Rust == w3gjs)
+    runs-on: ubuntu-latest
+    needs: [test-go, test-rust]
+    steps:
+      - uses: actions/checkout@v4
+
+      # ---- Go ----
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.21"
+          cache-dependency-path: w3ggo/go.mod
+
+      - name: Build Go parser binary
+        run: |
+          mkdir -p bin
+          go build -o bin/w3g-go ./w3ggo/cmd/parse
+
+      # ---- Rust ----
+      - uses: dtolnay/rust-toolchain@stable
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: w3grs
+
+      - name: Build Rust parser binary
+        run: cargo build --release
+        working-directory: w3grs
+
+      # ---- Node / w3gjs ----
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+          cache-dependency-path: validate/package-lock.json
+
+      - name: Install dependencies
+        run: npm install
+        working-directory: validate
+
+      # ---- Validate all replays in validate/replays/ ----
+      - name: Run cross-tool validation
+        env:
+          GO_BIN:   ${{ github.workspace }}/bin/w3g-go
+          RUST_BIN: ${{ github.workspace }}/w3grs/target/release/parse
+        run: npx tsx validate/validate.ts

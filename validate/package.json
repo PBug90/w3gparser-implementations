@@ -1,0 +1,16 @@
+{
+  "name": "w3g-cross-validate",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Cross-tool validation pipeline for w3g parser implementations",
+  "scripts": {
+    "validate": "tsx validate.ts"
+  },
+  "dependencies": {
+    "w3gjs": "^4.0.0"
+  },
+  "devDependencies": {
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.3"
+  }
+}

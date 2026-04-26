@@ -1,0 +1,24 @@
+# Rust
+w3grs/target/
+
+# Go
+bin/
+
+# Node
+validate/node_modules/
+*.log
+
+# Validation output (for local inspection only)
+validate/output/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+.claude
