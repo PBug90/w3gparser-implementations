@@ -70,7 +70,7 @@ jobs:
       - name: Build Go parser binary
         run: |
           mkdir -p bin
-          go build -o bin/w3g-go ./w3ggo/cmd/parse
+          cd w3ggo && go build -o ../bin/w3g-go ./cmd/parse
 
       # ---- Rust ----
       - uses: dtolnay/rust-toolchain@stable
