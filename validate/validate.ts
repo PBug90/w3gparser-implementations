@@ -14,7 +14,7 @@ const OUTPUT_DIR  = path.join(HERE, 'output');
 
 const EXE = process.platform === 'win32' ? '.exe' : '';
 const GO_BIN   = process.env.GO_BIN   ?? path.join(ROOT, 'bin', `w3g-go${EXE}`);
-const RUST_BIN = process.env.RUST_BIN ?? path.join(ROOT, 'w3grs', 'target', 'release', `parse${EXE}`);
+const RUST_BIN = process.env.RUST_BIN ?? path.join(ROOT, 'w3grs', 'target', 'release', `w3grs${EXE}`);
 
 const replays: string[] = process.argv.slice(2).length
   ? process.argv.slice(2).map(r => path.resolve(r))
@@ -103,12 +103,16 @@ async function main(): Promise<void> {
       ({ default: W3GReplay } = await import('w3gjs'));
     } catch {
       console.log('skipped (w3gjs not installed)');
+      console.log(`  timings  rs=${rustOut.parseTime}ms  go=${goOut.parseTime}ms`);
       continue;
     }
+    const w3gjsStart = performance.now();
     const w3gjsOut = await new W3GReplay().parse(replay);
+    const w3gjsMs = Math.round(performance.now() - w3gjsStart);
     saveOutput(stem, 'w3gjs', JSON.parse(JSON.stringify(w3gjsOut)));
     assert.deepStrictEqual(normW3gjs(w3gjsOut), normParser(goOut));
     console.log('ok');
+    console.log(`  timings  rs=${rustOut.parseTime}ms  go=${goOut.parseTime}ms  js=${w3gjsMs}ms`);
   }
 
   console.log(`\n${replays.length}/${replays.length} passed`);

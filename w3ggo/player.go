@@ -219,8 +219,9 @@ func (p *player) handle0x16(selectMode uint8, isAPM bool) {
 	}
 }
 
-func (p *player) handle0x51(playerID uint8, playerName string, gold uint32, lumber uint32) {
+func (p *player) handle0x51(slot uint8, playerID uint8, playerName string, gold uint32, lumber uint32) {
 	p.resourceTransfers = append(p.resourceTransfers, ResourceTransfer{
+		Slot:       int(slot),
 		PlayerID:   int(playerID),
 		PlayerName: playerName,
 		Gold:       int(gold),

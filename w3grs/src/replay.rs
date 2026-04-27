@@ -288,7 +288,7 @@ fn process_action(
         Action::TransferResources { slot, gold, lumber } => {
             if let Some(&pid) = slot_to_player_id.get(&(*slot as usize)) {
                 // We'll fix the name later in a second pass
-                player.handle_0x51(pid, String::new(), *gold, *lumber);
+                player.handle_0x51(*slot, pid, String::new(), *gold, *lumber);
             }
         }
         _ => {}

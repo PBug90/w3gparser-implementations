@@ -124,6 +124,7 @@ type Actions struct {
 
 // ResourceTransfer records a gold/lumber transfer between players.
 type ResourceTransfer struct {
+	Slot       int    `json:"slot"`
 	PlayerID   int    `json:"playerId"`
 	PlayerName string `json:"playerName"`
 	Gold       int    `json:"gold"`

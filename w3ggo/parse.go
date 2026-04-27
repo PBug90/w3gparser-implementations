@@ -268,7 +268,7 @@ func processAction(action Action, p *player, totalTime int, slotToPlayerID map[i
 		p.handleOther(action)
 	case actTransferResources:
 		if pid, ok := slotToPlayerID[int(action.slot)]; ok {
-			p.handle0x51(pid, "", action.gold, action.lumber)
+			p.handle0x51(action.slot, pid, "", action.gold, action.lumber)
 		}
 	}
 }

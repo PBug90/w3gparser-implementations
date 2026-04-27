@@ -162,6 +162,7 @@ impl Serialize for GroupHotkey {
 
 #[derive(Debug, Clone)]
 pub struct ResourceTransfer {
+    pub slot: u8,
     pub player_id: u8,
     pub player_name: String,
     pub gold: u32,
@@ -171,7 +172,8 @@ pub struct ResourceTransfer {
 
 impl Serialize for ResourceTransfer {
     fn serialize<S: Serializer>(&self, s: S) -> Result<S::Ok, S::Error> {
-        let mut m = s.serialize_map(Some(5))?;
+        let mut m = s.serialize_map(Some(6))?;
+        m.serialize_entry("slot", &self.slot)?;
         m.serialize_entry("playerId", &self.player_id)?;
         m.serialize_entry("playerName", &self.player_name)?;
         m.serialize_entry("gold", &self.gold)?;
@@ -435,8 +437,9 @@ impl Player {
         }
     }
 
-    pub fn handle_0x51(&mut self, player_id: u8, player_name: String, gold: u32, lumber: u32) {
+    pub fn handle_0x51(&mut self, slot: u8, player_id: u8, player_name: String, gold: u32, lumber: u32) {
         self.resource_transfers.push(ResourceTransfer {
+            slot,
             player_id,
             player_name,
             gold,
