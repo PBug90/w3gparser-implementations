@@ -3,7 +3,7 @@ package w3ggo_test
 import (
 	"testing"
 
-	w3g "w3ggo"
+	w3g "github.com/PBug90/w3gparser-implementations/w3ggo"
 )
 
 func TestReplay1302_Standard(t *testing.T) {

@@ -8,13 +8,24 @@ import (
 	"time"
 )
 
+type noopEventHandler struct{}
+
+func (noopEventHandler) OnBasicReplayInformation(_ BasicReplayInfo) {}
+func (noopEventHandler) OnGameDataBlock(_ GameDataBlock)            {}
+
 // ParseFile parses a WC3 replay from a file path.
 func ParseFile(path string) (*ParserOutput, error) {
+	return ParseFileWithHandler(path, noopEventHandler{})
+}
+
+// ParseFileWithHandler parses a WC3 replay from a file path, calling h for
+// each event as the replay is processed.
+func ParseFileWithHandler(path string, h EventHandler) (*ParserOutput, error) {
 	data, err := os.ReadFile(path)
 	if err != nil {
 		return nil, err
 	}
-	out := ParseBytes(data)
+	out := ParseBytesWithHandler(data, h)
 	if out == nil {
 		return nil, fmt.Errorf("parse failed")
 	}
@@ -23,6 +34,12 @@ func ParseFile(path string) (*ParserOutput, error) {
 
 // ParseBytes parses a WC3 replay from raw bytes.
 func ParseBytes(input []byte) *ParserOutput {
+	return ParseBytesWithHandler(input, noopEventHandler{})
+}
+
+// ParseBytesWithHandler parses a WC3 replay from raw bytes, calling h for
+// each event as the replay is processed.
+func ParseBytesWithHandler(input []byte, h EventHandler) *ParserOutput {
 	startTime := time.Now()
 
 	header, subHeader, blocks := parseRaw(input)
@@ -79,6 +96,39 @@ func ParseBytes(input []byte) *ParserOutput {
 		knownPlayerIDs[id] = true
 	}
 
+	// Emit OnBasicReplayInformation before game data processing
+	basicPlayers := make([]BasicPlayerInfo, 0, len(meta.slotRecords))
+	for _, slot := range meta.slotRecords {
+		if slot.slotStatus > 1 {
+			name := "Computer"
+			if rec, ok := tempPlayers[slot.playerID]; ok {
+				name = rec.playerName
+			}
+			basicPlayers = append(basicPlayers, BasicPlayerInfo{
+				PlayerID: slot.playerID,
+				Name:     name,
+				TeamID:   slot.teamID,
+				Color:    slot.color,
+				Race:     raceFlagToString(slot.raceFlag),
+			})
+		}
+	}
+	h.OnBasicReplayInformation(BasicReplayInfo{
+		BuildNumber: uint32(subHeader.buildNo),
+		Version:     gameVersion(int(subHeader.version)),
+		GameName:    meta.gameName,
+		RandomSeed:  meta.randomSeed,
+		StartSpots:  meta.startSpotCount,
+		Map: MapInfo{
+			Path:         meta.mapMeta.mapName,
+			File:         mapFilename(meta.mapMeta.mapName),
+			Checksum:     meta.mapMeta.mapChecksum,
+			ChecksumSha1: meta.mapMeta.mapChecksumSha1,
+		},
+		Players:   basicPlayers,
+		Expansion: subHeader.gameIdentifier == "PX3W",
+	})
+
 	const playerActionTrackInterval = 60000
 
 	totalTimeTracker := 0
@@ -87,6 +137,23 @@ func ParseBytes(input []byte) *ParserOutput {
 	var leaveEvents []leaveGameBlock
 
 	for _, block := range gameDataBlocks {
+		// Emit OnGameDataBlock before internal processing
+		switch block.typ {
+		case gdTimeslot:
+			ts := block.timeslot
+			cmdBlocks := make([]CommandBlock, len(ts.commandBlocks))
+			for i, cmd := range ts.commandBlocks {
+				cmdBlocks[i] = CommandBlock{PlayerID: cmd.playerID, Actions: cmd.actions}
+			}
+			h.OnGameDataBlock(TimeslotEvent{TimeIncrement: ts.timeIncrement, CommandBlocks: cmdBlocks})
+		case gdChatMessage:
+			chat := block.chat
+			h.OnGameDataBlock(ChatEvent{PlayerID: chat.playerID, Mode: chat.mode, Message: chat.message})
+		case gdLeaveGame:
+			lg := block.leaveGame
+			h.OnGameDataBlock(LeaveGameEvent{PlayerID: lg.playerID, Reason: lg.reason, Result: lg.result})
+		}
+
 		switch block.typ {
 		case gdTimeslot:
 			ts := block.timeslot
@@ -229,46 +296,42 @@ func ParseBytes(input []byte) *ParserOutput {
 }
 
 func processAction(action Action, p *player, totalTime int, slotToPlayerID map[int]uint8) {
-	switch action.typ {
-	case actUnitAbilityNoParams:
-		fmt := formatObjectId(action.orderId)
-		if fmt.isStringEncoded() {
-			s := fmt.strVal
+	switch action.Type {
+	case ActUnitAbilityNoParams:
+		fmtID := FormatObjectID(action.OrderID)
+		if fmtID.IsStringEncoded() {
+			s := fmtID.StrVal
 			if s == "tert" || s == "tret" {
 				p.handleRetraining(totalTime)
 			}
 		}
-		p.handle0x10(fmt, totalTime)
-	case actUnitAbilityTargetPos:
-		fmt := formatObjectId(action.orderId)
-		p.handle0x11(fmt, totalTime)
-	case actUnitAbilityTargetObj:
-		fmt := formatObjectId(action.orderId)
-		p.handle0x12(fmt, totalTime)
-	case actGiveItemToUnit:
+		p.handle0x10(fmtID, totalTime)
+	case ActUnitAbilityTargetPos:
+		p.handle0x11(FormatObjectID(action.OrderID), totalTime)
+	case ActUnitAbilityTargetObj:
+		p.handle0x12(FormatObjectID(action.OrderID), totalTime)
+	case ActGiveItemToUnit:
 		p.handle0x13()
-	case actUnitAbilityTwoTargets:
-		fmt := formatObjectId(action.orderId)
-		p.handle0x14(fmt)
-	case actUnitAbilityTwoTargetsItem:
-		fmt := formatObjectId(action.orderId)
-		p.handle0x14(fmt)
-	case actChangeSelection:
-		if action.selectMode == 0x02 {
+	case ActUnitAbilityTwoTargets:
+		p.handle0x14(FormatObjectID(action.OrderID))
+	case ActUnitAbilityTwoTargetsItem:
+		p.handle0x14(FormatObjectID(action.OrderID))
+	case ActChangeSelection:
+		if action.SelectMode == 0x02 {
 			p.lastActionWasDeselect = true
-			p.handle0x16(action.selectMode, true)
+			p.handle0x16(action.SelectMode, true)
 		} else {
 			if !p.lastActionWasDeselect {
-				p.handle0x16(action.selectMode, true)
+				p.handle0x16(action.SelectMode, true)
 			}
 			p.lastActionWasDeselect = false
 		}
-	case actAssignGroupHotkey, actSelectGroupHotkey, actSelectGroundItem, actCancelHeroRevival,
-		actRemoveUnitFromQueue, actEscPressed, actChooseHeroSkillSubmenu, actEnterBuildingSubmenu:
+	case ActAssignGroupHotkey, ActSelectGroupHotkey, ActSelectGroundItem, ActCancelHeroRevival,
+		ActRemoveUnitFromQueue, ActEscPressed, ActChooseHeroSkillSubmenu, ActEnterBuildingSubmenu:
 		p.handleOther(action)
-	case actTransferResources:
-		if pid, ok := slotToPlayerID[int(action.slot)]; ok {
-			p.handle0x51(action.slot, pid, "", action.gold, action.lumber)
+	case ActTransferResources:
+		if pid, ok := slotToPlayerID[int(action.Slot)]; ok {
+			p.handle0x51(action.Slot, pid, "", action.Gold, action.Lumber)
 		}
 	}
 }

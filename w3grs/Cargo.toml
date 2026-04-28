@@ -2,6 +2,16 @@
 name = "w3grs"
 version = "0.1.0"
 edition = "2021"
+description = "Fast Warcraft III replay (.w3g) parser"
+license = "MIT"
+repository = "https://github.com/PBug90/w3gparser-implementations"
+keywords = ["warcraft", "replay", "parser", "w3g", "wc3"]
+categories = ["parser-implementations", "game-development"]
+readme = "README.md"
+
+[[bin]]
+name = "w3grs"
+path = "src/main.rs"
 
 [dependencies]
 flate2 = "1"

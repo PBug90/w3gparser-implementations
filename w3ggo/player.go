@@ -128,9 +128,9 @@ func (p *player) handleRetraining(gametime int) {
 	p.lastRetrainingTime = gametime
 }
 
-func (p *player) handle0x10(itemID ObjectId, gametime int) {
-	if itemID.isStringEncoded() {
-		s := itemID.strVal
+func (p *player) handle0x10(itemID ObjectID, gametime int) {
+	if itemID.IsStringEncoded() {
+		s := itemID.StrVal
 		if len(s) > 0 {
 			switch s[0] {
 			case 'A':
@@ -159,13 +159,13 @@ func (p *player) handle0x10(itemID ObjectId, gametime int) {
 	p.currentlyTrackedAPM++
 }
 
-func (p *player) handle0x11(itemID ObjectId, gametime int) {
+func (p *player) handle0x11(itemID ObjectID, gametime int) {
 	p.currentlyTrackedAPM++
-	if itemID.isStringEncoded() {
-		p.handleStringEncodedItemID(itemID.strVal, gametime)
+	if itemID.IsStringEncoded() {
+		p.handleStringEncodedItemID(itemID.StrVal, gametime)
 	} else {
 		// alphanumeric
-		arr := itemID.arrVal
+		arr := itemID.ArrVal
 		if arr[0] <= 0x19 && arr[1] == 0 {
 			p.actions.Basic++
 		} else {
@@ -174,12 +174,12 @@ func (p *player) handle0x11(itemID ObjectId, gametime int) {
 	}
 }
 
-func (p *player) handle0x12(itemID ObjectId, gametime int) {
-	if itemID.isStringEncoded() {
-		p.handleStringEncodedItemID(itemID.strVal, gametime)
+func (p *player) handle0x12(itemID ObjectID, gametime int) {
+	if itemID.IsStringEncoded() {
+		p.handleStringEncodedItemID(itemID.StrVal, gametime)
 		p.actions.Ability++
 	} else {
-		arr := itemID.arrVal
+		arr := itemID.ArrVal
 		if arr[0] == 0x03 && arr[1] == 0 {
 			p.actions.RightClick++
 		} else if arr[0] <= 0x19 && arr[1] == 0 {
@@ -196,11 +196,11 @@ func (p *player) handle0x13() {
 	p.currentlyTrackedAPM++
 }
 
-func (p *player) handle0x14(itemID ObjectId) {
-	if itemID.isStringEncoded() {
+func (p *player) handle0x14(itemID ObjectID) {
+	if itemID.IsStringEncoded() {
 		p.actions.Ability++
 	} else {
-		arr := itemID.arrVal
+		arr := itemID.ArrVal
 		if arr[0] == 0x03 && arr[1] == 0 {
 			p.actions.RightClick++
 		} else if arr[0] <= 0x19 && arr[1] == 0 {
@@ -231,27 +231,27 @@ func (p *player) handle0x51(slot uint8, playerID uint8, playerName string, gold 
 }
 
 func (p *player) handleOther(action Action) {
-	switch action.typ {
-	case actAssignGroupHotkey:
+	switch action.Type {
+	case ActAssignGroupHotkey:
 		p.actions.AssignGroup++
 		p.currentlyTrackedAPM++
-		key := (int(action.groupNumber) + 1) % 10
+		key := (int(action.GroupNumber) + 1) % 10
 		hk := p.groupHotkeys[key]
 		hk.Assigned++
 		p.groupHotkeys[key] = hk
-	case actSelectGroupHotkey:
+	case ActSelectGroupHotkey:
 		p.actions.SelectHotkey++
 		p.currentlyTrackedAPM++
-		key := (int(action.groupNumber) + 1) % 10
+		key := (int(action.GroupNumber) + 1) % 10
 		hk := p.groupHotkeys[key]
 		hk.Used++
 		p.groupHotkeys[key] = hk
-	case actSelectGroundItem, actCancelHeroRevival, actChooseHeroSkillSubmenu, actEnterBuildingSubmenu:
+	case ActSelectGroundItem, ActCancelHeroRevival, ActChooseHeroSkillSubmenu, ActEnterBuildingSubmenu:
 		p.currentlyTrackedAPM++
-	case actRemoveUnitFromQueue:
+	case ActRemoveUnitFromQueue:
 		p.actions.RemoveUnit++
 		p.currentlyTrackedAPM++
-	case actEscPressed:
+	case ActEscPressed:
 		p.actions.ESC++
 		p.currentlyTrackedAPM++
 	}

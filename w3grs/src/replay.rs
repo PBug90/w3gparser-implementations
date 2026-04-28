@@ -9,13 +9,26 @@ use crate::parser::metadata::{parse as parse_metadata, SlotRecord};
 use crate::parser::raw::{parse as parse_raw, decompress_blocks};
 use crate::player::Player;
 use crate::types::*;
+use crate::ReplayHandler;
 
 pub fn parse_file(path: &str) -> Option<ParserOutput> {
     let data = std::fs::read(path).ok()?;
     parse_bytes(&data)
 }
 
+pub fn parse_file_with_handler<H: ReplayHandler>(path: &str, handler: &mut H) -> Option<ParserOutput> {
+    let data = std::fs::read(path).ok()?;
+    parse_bytes_with_handler(&data, handler)
+}
+
+struct NoopHandler;
+impl ReplayHandler for NoopHandler {}
+
 pub fn parse_bytes(input: &[u8]) -> Option<ParserOutput> {
+    parse_bytes_with_handler(input, &mut NoopHandler)
+}
+
+pub fn parse_bytes_with_handler<H: ReplayHandler>(input: &[u8], handler: &mut H) -> Option<ParserOutput> {
     let start = Instant::now();
 
     let (header, subheader, blocks) = parse_raw(input)?;
@@ -58,6 +71,37 @@ pub fn parse_bytes(input: &[u8]) -> Option<ParserOutput> {
     }
 
     let known_player_ids: HashSet<u8> = players.keys().copied().collect();
+
+    // Emit on_basic_replay_information before game data processing
+    let basic_players: Vec<BasicPlayerInfo> = metadata.slot_records.iter()
+        .filter(|s| s.slot_status > 1)
+        .map(|s| BasicPlayerInfo {
+            player_id: s.player_id,
+            name: temp_players.get(&s.player_id)
+                .map(|r| r.player_name.clone())
+                .unwrap_or_else(|| "Computer".to_string()),
+            team_id: s.team_id,
+            color: s.color,
+            race: race_flag_to_string(s.race_flag),
+        })
+        .collect();
+    let basic_info = BasicReplayInfo {
+        build_number: subheader.build_no,
+        version: game_version(subheader.version),
+        game_name: metadata.game_name.clone(),
+        random_seed: metadata.random_seed,
+        start_spots: metadata.start_spot_count,
+        map: MapInfo {
+            path: metadata.map.map_name.clone(),
+            file: map_filename(&metadata.map.map_name),
+            checksum: metadata.map.map_checksum.clone(),
+            checksum_sha1: metadata.map.map_checksum_sha1.clone(),
+        },
+        players: basic_players,
+        expansion: subheader.game_identifier == "PX3W",
+    };
+    handler.on_basic_replay_information(&basic_info);
+
     let player_action_track_interval: u32 = 60000;
 
     let mut total_time_tracker: u32 = 0;
@@ -67,6 +111,7 @@ pub fn parse_bytes(input: &[u8]) -> Option<ParserOutput> {
     let mut leave_events: Vec<crate::parser::game_data::LeaveGameBlock> = Vec::new();
 
     for block in &game_data_blocks {
+        handler.on_gamedatablock(block);
         match block {
             GameDataBlock::Timeslot(ts) => {
                 total_time_tracker += ts.time_increment as u32;

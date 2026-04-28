@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"os"
 
-	w3g "w3ggo"
+	w3g "github.com/PBug90/w3gparser-implementations/w3ggo"
 )
 
 func main() {

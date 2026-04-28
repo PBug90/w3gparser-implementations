@@ -143,6 +143,29 @@ impl Serialize for ChatMessage {
     }
 }
 
+/// Basic player information available before game data processing.
+#[derive(Debug, Clone)]
+pub struct BasicPlayerInfo {
+    pub player_id: u8,
+    pub name: String,
+    pub team_id: u8,
+    pub color: u8,
+    pub race: String,
+}
+
+/// Snapshot of replay metadata emitted before game data blocks are processed.
+#[derive(Debug, Clone)]
+pub struct BasicReplayInfo {
+    pub build_number: u16,
+    pub version: String,
+    pub game_name: String,
+    pub random_seed: u32,
+    pub start_spots: u8,
+    pub map: MapInfo,
+    pub players: Vec<BasicPlayerInfo>,
+    pub expansion: bool,
+}
+
 /// Final output of the parser - mirrors ParserOutput from w3gjs
 #[derive(Debug)]
 pub struct ParserOutput {
