@@ -394,28 +394,39 @@ func determineWinningTeam(gametype string, leaveEvents []leaveGameBlock, players
 		return -1
 	}
 
-	winningTeamID := -1
-	for index, event := range leaveEvents {
-		p, ok := players[event.playerID]
-		if !ok {
-			continue
-		}
-		if winningTeamID != -1 {
-			continue
-		}
-		if event.result == "09000000" {
-			winningTeamID = int(p.teamID)
-			continue
-		}
-		if event.reason == "0c000000" {
-			winningTeamID = int(p.teamID)
-			continue
-		}
-		if index == len(leaveEvents)-1 {
-			winningTeamID = int(p.teamID)
+	// Filter to non-observer leave events (observers are not in the players map)
+	nonObsLeaves := make([]leaveGameBlock, 0)
+	for _, event := range leaveEvents {
+		if _, ok := players[event.playerID]; ok {
+			nonObsLeaves = append(nonObsLeaves, event)
 		}
 	}
-	return winningTeamID
+
+	// Tier 1: player left with victory result code
+	for _, event := range nonObsLeaves {
+		if event.result == "09000000" {
+			return int(players[event.playerID].teamID)
+		}
+	}
+
+	// Tier 2: WC3 ended the game for the winner (game-over reason)
+	for _, event := range nonObsLeaves {
+		if event.reason == "0c000000" {
+			return int(players[event.playerID].teamID)
+		}
+	}
+
+	// Tier 3: first non-observer to leave is the loser; the other player wins
+	if len(nonObsLeaves) > 0 {
+		loserTeamID := players[nonObsLeaves[0].playerID].teamID
+		for _, p := range players {
+			if p.teamID != loserTeamID {
+				return int(p.teamID)
+			}
+		}
+	}
+
+	return -1
 }
 
 func generateID(randomSeed uint32, players map[uint8]*player, gameName string) string {

@@ -21,6 +21,9 @@ fn test_129_netease_obs() {
     assert_eq!(result.map.checksum_sha1, "c232d68286eb4604cc66db42d45e28017b78e3c4");
     assert_eq!(result.map.file, "(4)TurtleRock.w3x");
     assert_eq!(result.map.path, "Maps/1.29\\(4)TurtleRock.w3x");
+    assert_eq!(result.winning_team_id, 0);
+    let winner = result.players.iter().find(|p| p.teamid == result.winning_team_id as u8).unwrap();
+    assert_eq!(winner.name, "Headshot！");
 }
 
 #[test]
@@ -79,6 +82,9 @@ fn test_129_standard_obs() {
     assert_eq!(result.map.checksum_sha1, "79ba7579f28e5ccfd741a1ebfbff95a56813086e");
     assert_eq!(result.map.file, "w3arena__twistedmeadows__v3.w3x");
     assert_eq!(result.map.path, "Maps\\w3arena\\w3arena__twistedmeadows__v3.w3x");
+    assert_eq!(result.winning_team_id, 0);
+    let winner = result.players.iter().find(|p| p.teamid == result.winning_team_id as u8).unwrap();
+    assert_eq!(winner.name, "Stormhoof");
 }
 
 #[test]
@@ -91,4 +97,5 @@ fn test_129_3on3_leaver_apm() {
     assert_eq!(post_leave_sum, 0);
     assert_eq!(abmit.apm, 98);
     assert_eq!(abmit.current_time_played, 4371069);
+    assert_eq!(result.winning_team_id, -1);
 }

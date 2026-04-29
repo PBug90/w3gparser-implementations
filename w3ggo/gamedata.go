@@ -96,8 +96,8 @@ func parseGameData(data []byte, isPost202 bool) []gameDataBlock {
 				pos += 8
 			}
 		default:
-			// unknown block - can't continue safely
-			return blocks
+			// unknown block id - skip and continue (mirrors w3gjs behavior)
+			continue
 		}
 	}
 	return blocks

@@ -75,8 +75,8 @@ pub fn parse_game_data(data: &[u8], is_post_202: bool) -> Vec<GameDataBlock> {
                 pos = (pos + 8).min(data.len());
             }
             _ => {
-                // unknown block - can't continue safely
-                break;
+                // unknown block id - skip and continue (mirrors w3gjs behavior)
+                continue;
             }
         }
     }

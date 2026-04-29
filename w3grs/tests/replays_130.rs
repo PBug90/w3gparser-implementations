@@ -10,6 +10,9 @@ fn test_1302_standard() {
     assert_eq!(result.version, "1.30.2+");
     assert_eq!(result.matchup, "NvU");
     assert_eq!(result.players.len(), 2);
+    assert_eq!(result.winning_team_id, 0);
+    let winner = result.players.iter().find(|p| p.teamid == result.winning_team_id as u8).unwrap();
+    assert_eq!(winner.name, "LexBG");
 }
 
 #[test]
@@ -17,6 +20,9 @@ fn test_1303_standard() {
     let result = parse_file(&replay_path("130", "standard_1303.w3g")).expect("parse failed");
     assert_eq!(result.version, "1.30.2+");
     assert_eq!(result.players.len(), 2);
+    assert_eq!(result.winning_team_id, 1);
+    let winner = result.players.iter().find(|p| p.teamid == result.winning_team_id as u8).unwrap();
+    assert_eq!(winner.name, "|c00ffbd00:D");
 }
 
 #[test]
@@ -24,6 +30,9 @@ fn test_1304_standard() {
     let result = parse_file(&replay_path("130", "standard_1304.w3g")).expect("parse failed");
     assert_eq!(result.version, "1.30.2+");
     assert_eq!(result.players.len(), 2);
+    assert_eq!(result.winning_team_id, 1);
+    let winner = result.players.iter().find(|p| p.teamid == result.winning_team_id as u8).unwrap();
+    assert_eq!(winner.name, "buffMyKotg");
 }
 
 #[test]
@@ -32,6 +41,7 @@ fn test_1304_2on2() {
     assert_eq!(result.version, "1.30.2+");
     assert_eq!(result.build_number, 6061);
     assert_eq!(result.players.len(), 4);
+    assert_eq!(result.winning_team_id, -1);
 }
 
 #[test]
@@ -62,6 +72,9 @@ fn test_130_standard() {
     assert_eq!(result.map.checksum, "c3cae01d");
     assert_eq!(result.map.checksum_sha1, "23dc614cca6fd7ec232fbba4898d318a90b95bc6");
     assert_eq!(result.map.path, "Maps\\FrozenThrone\\(4)TwistedMeadows.w3x");
+    assert_eq!(result.winning_team_id, 3);
+    let winner = result.players.iter().find(|p| p.teamid == result.winning_team_id as u8).unwrap();
+    assert_eq!(winner.name, "123456789012345");
 }
 
 #[test]

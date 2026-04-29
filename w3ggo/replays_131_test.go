@@ -13,6 +13,7 @@ func TestReplay131_Action0x7a(t *testing.T) {
 	}
 	assertEqual(t, "version", result.Version, "1.31")
 	assertEqual(t, "players len", len(result.Players), 1)
+	assertEqual(t, "winning_team_id", result.WinningTeamID, -1)
 }
 
 func TestReplay131_TomeOfRetraining(t *testing.T) {
@@ -91,6 +92,12 @@ func TestReplay131_TomeOfRetraining(t *testing.T) {
 	assertAbility(6, 1141147, "AHbz")
 	assertAbility(7, 1141460, "AHab")
 	assertAbility(8, 1141569, "AHab")
+	assertEqual(t, "winning_team_id", result.WinningTeamID, 1)
+	winner := findPlayerByTeam(result.Players, result.WinningTeamID)
+	if winner == nil {
+		t.Fatal("winner not found")
+	}
+	assertEqual(t, "winner.name", winner.Name, "[OCG]shocker")
 }
 
 func TestReplay131_RocMapName(t *testing.T) {
@@ -101,4 +108,10 @@ func TestReplay131_RocMapName(t *testing.T) {
 	assertEqual(t, "version", result.Version, "1.31")
 	assertEqual(t, "build_number", result.BuildNumber, 6072)
 	assertEqual(t, "map.file", result.Map.File, "(4)LostTemple [Unforged 0.5 RoC].w3x")
+	assertEqual(t, "winning_team_id", result.WinningTeamID, 1)
+	winner := findPlayerByTeam(result.Players, result.WinningTeamID)
+	if winner == nil {
+		t.Fatal("winner not found")
+	}
+	assertEqual(t, "winner.name", winner.Name, "syNtec")
 }

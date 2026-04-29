@@ -7,7 +7,7 @@
     "validate": "tsx validate.ts"
   },
   "dependencies": {
-    "w3gjs": "^4.0.0"
+    "w3gjs": "^4.1.0"
   },
   "devDependencies": {
     "tsx": "^4.19.2",

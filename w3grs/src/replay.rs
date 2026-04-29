@@ -383,26 +383,30 @@ fn determine_winning_team(
         return -1;
     }
 
-    let mut winning_team_id: i32 = -1;
-    for (index, event) in leave_events.iter().enumerate() {
-        if let Some(p) = players.get(&event.player_id) {
-            // check if observer - observers are already removed, so players here are non-observers
-            if winning_team_id != -1 { continue; }
+    // Filter to non-observer leave events (observers are not in the players map)
+    let non_obs_leaves: Vec<_> = leave_events.iter()
+        .filter(|e| players.contains_key(&e.player_id))
+        .collect();
 
-            if event.result == "09000000" {
-                winning_team_id = p.teamid as i32;
-                continue;
-            }
-            if event.reason == "0c000000" {
-                winning_team_id = p.teamid as i32;
-                continue;
-            }
-            if index == leave_events.len() - 1 {
-                winning_team_id = p.teamid as i32;
-            }
+    // Tier 1: player left with victory result code
+    if let Some(event) = non_obs_leaves.iter().find(|e| e.result == "09000000") {
+        return players[&event.player_id].teamid as i32;
+    }
+
+    // Tier 2: WC3 ended the game for the winner (game-over reason)
+    if let Some(event) = non_obs_leaves.iter().find(|e| e.reason == "0c000000") {
+        return players[&event.player_id].teamid as i32;
+    }
+
+    // Tier 3: first non-observer to leave is the loser; the other player wins
+    if let Some(first) = non_obs_leaves.first() {
+        let loser_team = players[&first.player_id].teamid;
+        if let Some(winner) = players.values().find(|p| p.teamid != loser_team) {
+            return winner.teamid as i32;
         }
     }
-    winning_team_id
+
+    -1
 }
 
 fn generate_id(random_seed: u32, players: &HashMap<u8, Player>, game_name: &str) -> String {

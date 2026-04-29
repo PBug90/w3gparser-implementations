@@ -14,6 +14,12 @@ func TestReplay1302_Standard(t *testing.T) {
 	assertEqual(t, "version", result.Version, "1.30.2+")
 	assertEqual(t, "matchup", result.Matchup, "NvU")
 	assertEqual(t, "players len", len(result.Players), 2)
+	assertEqual(t, "winning_team_id", result.WinningTeamID, 0)
+	winner := findPlayerByTeam(result.Players, result.WinningTeamID)
+	if winner == nil {
+		t.Fatal("winner not found")
+	}
+	assertEqual(t, "winner.name", winner.Name, "LexBG")
 }
 
 func TestReplay1303_Standard(t *testing.T) {
@@ -23,6 +29,12 @@ func TestReplay1303_Standard(t *testing.T) {
 	}
 	assertEqual(t, "version", result.Version, "1.30.2+")
 	assertEqual(t, "players len", len(result.Players), 2)
+	assertEqual(t, "winning_team_id", result.WinningTeamID, 1)
+	winner := findPlayerByTeam(result.Players, result.WinningTeamID)
+	if winner == nil {
+		t.Fatal("winner not found")
+	}
+	assertEqual(t, "winner.name", winner.Name, "|c00ffbd00:D")
 }
 
 func TestReplay1304_Standard(t *testing.T) {
@@ -32,6 +44,12 @@ func TestReplay1304_Standard(t *testing.T) {
 	}
 	assertEqual(t, "version", result.Version, "1.30.2+")
 	assertEqual(t, "players len", len(result.Players), 2)
+	assertEqual(t, "winning_team_id", result.WinningTeamID, 1)
+	winner := findPlayerByTeam(result.Players, result.WinningTeamID)
+	if winner == nil {
+		t.Fatal("winner not found")
+	}
+	assertEqual(t, "winner.name", winner.Name, "buffMyKotg")
 }
 
 func TestReplay1304_2on2(t *testing.T) {
@@ -42,6 +60,7 @@ func TestReplay1304_2on2(t *testing.T) {
 	assertEqual(t, "version", result.Version, "1.30.2+")
 	assertEqual(t, "build_number", result.BuildNumber, 6061)
 	assertEqual(t, "players len", len(result.Players), 4)
+	assertEqual(t, "winning_team_id", result.WinningTeamID, -1)
 }
 
 func TestReplay130_Standard(t *testing.T) {
@@ -91,6 +110,12 @@ func TestReplay130_Standard(t *testing.T) {
 	assertEqual(t, "map.checksum", result.Map.Checksum, "c3cae01d")
 	assertEqual(t, "map.checksum_sha1", result.Map.ChecksumSha1, "23dc614cca6fd7ec232fbba4898d318a90b95bc6")
 	assertEqual(t, "map.path", result.Map.Path, "Maps\\FrozenThrone\\(4)TwistedMeadows.w3x")
+	assertEqual(t, "winning_team_id", result.WinningTeamID, 3)
+	winner := findPlayerByTeam(result.Players, result.WinningTeamID)
+	if winner == nil {
+		t.Fatal("winner not found")
+	}
+	assertEqual(t, "winner.name", winner.Name, "123456789012345")
 }
 
 func TestReplay130_ResetElapsedMs(t *testing.T) {

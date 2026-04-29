@@ -9,6 +9,7 @@ fn test_131_action_0x7a() {
     let result = parse_file(&replay_path("131", "action0x7a.w3g")).expect("parse failed");
     assert_eq!(result.version, "1.31");
     assert_eq!(result.players.len(), 1);
+    assert_eq!(result.winning_team_id, -1);
 }
 
 #[test]
@@ -46,6 +47,9 @@ fn test_131_tome_of_retraining() {
     match &ao[6] { AbilityOrderEntry::Ability { time, value } => { assert_eq!(*time, 1141147); assert_eq!(value, "AHbz"); } _ => panic!() }
     match &ao[7] { AbilityOrderEntry::Ability { time, value } => { assert_eq!(*time, 1141460); assert_eq!(value, "AHab"); } _ => panic!() }
     match &ao[8] { AbilityOrderEntry::Ability { time, value } => { assert_eq!(*time, 1141569); assert_eq!(value, "AHab"); } _ => panic!() }
+    assert_eq!(result.winning_team_id, 1);
+    let winner = result.players.iter().find(|p| p.teamid == result.winning_team_id as u8).unwrap();
+    assert_eq!(winner.name, "[OCG]shocker");
 }
 
 #[test]
@@ -54,4 +58,7 @@ fn test_131_roc_map_name() {
     assert_eq!(result.version, "1.31");
     assert_eq!(result.build_number, 6072);
     assert_eq!(result.map.file, "(4)LostTemple [Unforged 0.5 RoC].w3x");
+    assert_eq!(result.winning_team_id, 1);
+    let winner = result.players.iter().find(|p| p.teamid == result.winning_team_id as u8).unwrap();
+    assert_eq!(winner.name, "syNtec");
 }

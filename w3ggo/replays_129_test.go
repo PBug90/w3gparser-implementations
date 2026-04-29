@@ -29,6 +29,12 @@ func TestReplay129_NeteaseObs(t *testing.T) {
 	assertEqual(t, "map.checksum_sha1", result.Map.ChecksumSha1, "c232d68286eb4604cc66db42d45e28017b78e3c4")
 	assertEqual(t, "map.file", result.Map.File, "(4)TurtleRock.w3x")
 	assertEqual(t, "map.path", result.Map.Path, "Maps/1.29\\(4)TurtleRock.w3x")
+	assertEqual(t, "winning_team_id", result.WinningTeamID, 0)
+	winner := findPlayerByTeam(result.Players, result.WinningTeamID)
+	if winner == nil {
+		t.Fatal("winner not found")
+	}
+	assertEqual(t, "winner.name", winner.Name, "Headshot！")
 }
 
 func TestReplay129_StandardObs(t *testing.T) {
@@ -97,6 +103,12 @@ func TestReplay129_StandardObs(t *testing.T) {
 	assertEqual(t, "map.checksum_sha1", result.Map.ChecksumSha1, "79ba7579f28e5ccfd741a1ebfbff95a56813086e")
 	assertEqual(t, "map.file", result.Map.File, "w3arena__twistedmeadows__v3.w3x")
 	assertEqual(t, "map.path", result.Map.Path, "Maps\\w3arena\\w3arena__twistedmeadows__v3.w3x")
+	assertEqual(t, "winning_team_id", result.WinningTeamID, 0)
+	winner := findPlayerByTeam(result.Players, result.WinningTeamID)
+	if winner == nil {
+		t.Fatal("winner not found")
+	}
+	assertEqual(t, "winner.name", winner.Name, "Stormhoof")
 }
 
 func TestReplay129_3on3LeaverAPM(t *testing.T) {
@@ -117,4 +129,5 @@ func TestReplay129_3on3LeaverAPM(t *testing.T) {
 	assertEqual(t, "post_leave_sum", postLeaveSum, 0)
 	assertEqual(t, "abmit.apm", abmit.APM, 98)
 	assertEqual(t, "abmit.current_time_played", abmit.CurrentTimePlayed, 4371069)
+	assertEqual(t, "winning_team_id", result.WinningTeamID, -1)
 }
